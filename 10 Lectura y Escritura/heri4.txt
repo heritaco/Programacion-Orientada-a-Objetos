@@ -1,0 +1,3 @@
+
+Partidas jugadas: 7
+Partidas ganadas: 3

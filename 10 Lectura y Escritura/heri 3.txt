@@ -1,0 +1,3 @@
+Usuario: heri 3
+Partidas jugadas: 0
+Partidas ganadas: 2
