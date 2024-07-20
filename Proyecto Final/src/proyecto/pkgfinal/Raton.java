@@ -1,112 +1,151 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+package proyecto.pkgfinal;
+
+import java.io.*;
+import java.util.*;
 
 public class Raton {
-    private char[][] laberinto;
-    private List<String> movimientos;
-    private int startX, startY;
+    // Atributos
+    public char[][] laberinto; // El laberinto es una matriz
+    public List<String> movimientos; // Es una lista de movimientos
+    public int iniciox; // La posicion de inicio de x
+    public int inicioy; // La posicion de inicio de y
 
-    public Raton(String filePath) throws IOException {
-        this.laberinto = leerLaberinto(filePath);
-        this.movimientos = new ArrayList<>();
-        buscarInicio();
+    // Constructor
+    public Raton() throws IOException { // throws IOException es para manejar excepciones por si no se encuentra el
+                                        // archivo
+        this.laberinto = leerLaberinto(); // Lee el laberinto
+        this.movimientos = new ArrayList<String>(); // Inicializa la lista de movimientos
+        this.iniciox = 0; // Inicializa la posicion de inicio de x
+        this.inicioy = 0; // Inicializa la posicion de inicio de y
     }
 
-    private char[][] leerLaberinto(String filePath) throws IOException {
-        List<char[]> lines = new ArrayList<>();
-        BufferedReader reader = new BufferedReader(new FileReader(filePath));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            lines.add(line.toCharArray());
+    public char[][] leerLaberinto() throws IOException {
+
+        Ejecucion ejecucion = new Ejecucion();
+        String file = ejecucion.file; // Obtiene el nombre del archivo
+        List<char[]> lineas = new ArrayList<>(); // Crea una lista de lineas
+
+        File inFile = new File(file);
+        FileReader fileReader = new FileReader(inFile);
+        BufferedReader bufReader = new BufferedReader(fileReader);
+        String linea = bufReader.readLine();
+
+        // Para cada linea del archivo, si la linea no es nula, la agrega a la lista de
+        while (linea != null) {
+            lineas.add(linea.toCharArray()); // toCharArray convierte la linea en un arreglo de caracteres
+            linea = bufReader.readLine(); // Lee la siguiente linea
         }
-        reader.close();
-        return lines.toArray(new char[0][]);
+
+        // Convierte la lista de lineas en una matriz
+        char[][] laberinto = new char[lineas.size()][]; // Crea una matriz de caracteres con el tamaño de la lista de
+                                                        // lineas
+        // Recorre la lista de lineas y la convierte en una matriz
+        for (int i = 0; i < lineas.size(); i++) {
+            laberinto[i] = lineas.get(i); // Agrega la linea a la matriz
+        }
+
+        return laberinto;
     }
 
-    private void buscarInicio() {
-        for (int i = 0; i < laberinto.length; i++) {
-            for (int j = 0; j < laberinto[i].length; j++) {
-                if (laberinto[i][j] == 'S') {
-                    startX = i;
-                    startY = j;
+    public void buscarInicio() {
+        for (int i = 0; i < laberinto.length; i++) { // lee las filas
+            for (int j = 0; j < laberinto[i].length; j++) { // lee las columnas
+                if (laberinto[i][j] == 'S') { // cuando encuentre 'S'
+                    iniciox = i;
+                    inicioy = j;
                     return;
                 }
             }
         }
     }
 
-    public List<String> resolverLaberinto() {
-        if (mover(startX, startY)) {
-            return movimientos;
-        } else {
-            return null; // No se encontró camino
-        }
-    }
-
     private boolean mover(int x, int y) {
-        if (laberinto[x][y] == 'F') { // Llegamos a la meta
-            return true;
+
+        if (laberinto[x][y] == 'F') { // Si llegamos a la salida
+            return true; // Terminamos
         }
 
         laberinto[x][y] = '1'; // Marcamos como visitado
 
-        if (esValido(x + 1, y)) {
+        // Verificamos si podemos movernos
+        if (x + 1 >= 0 && x + 1 < laberinto.length && y >= 0 && y < laberinto[0].length
+                && (laberinto[x + 1][y] == '0' || laberinto[x + 1][y] == 'F')) {
+
             movimientos.add("abajo");
+
+            // Llamamos recursivamente a mover para la nueva posicion
             if (mover(x + 1, y)) {
+                // Si se llega a la salida, retornamos true
                 return true;
             }
-            movimientos.remove(movimientos.size() - 1);
         }
 
-        if (esValido(x - 1, y)) {
+        if (x - 1 >= 0 && x - 1 < laberinto.length && y >= 0 && y < laberinto[0].length
+                && (laberinto[x - 1][y] == '0' || laberinto[x - 1][y] == 'F')) {
             movimientos.add("arriba");
             if (mover(x - 1, y)) {
                 return true;
             }
-            movimientos.remove(movimientos.size() - 1);
         }
 
-        if (esValido(x, y + 1)) {
+        if (x >= 0 && x < laberinto.length && y + 1 >= 0 && y + 1 < laberinto[0].length
+                && (laberinto[x][y + 1] == '0' || laberinto[x][y + 1] == 'F')) {
             movimientos.add("derecha");
             if (mover(x, y + 1)) {
                 return true;
             }
-            movimientos.remove(movimientos.size() - 1);
         }
 
-        if (esValido(x, y - 1)) {
+        if (x >= 0 && x < laberinto.length && y - 1 >= 0 && y - 1 < laberinto[0].length
+                && (laberinto[x][y - 1] == '0' || laberinto[x][y - 1] == 'F')) {
+
             movimientos.add("izquierda");
+
             if (mover(x, y - 1)) {
                 return true;
             }
-            movimientos.remove(movimientos.size() - 1);
         }
 
-        laberinto[x][y] = '0';
         return false;
     }
 
-    private boolean esValido(int x, int y) {
-        return x >= 0 && x < laberinto.length && y >= 0 && y < laberinto[0].length
-                && (laberinto[x][y] == '0' || laberinto[x][y] == 'F');
-    }
+    public void resolverLaberinto() {
 
-    public static void main(String[] args) {
+        Ejecucion ejecucion = new Ejecucion();
+        String filen = ejecucion.file;
+
+        File file = new File("Solucion de " + filen);
+        FileWriter miFileWriter = null;
+        PrintWriter miPrintWriter = null;
+
+        // Para que se sobreescriva lo comente :p
+        // if (file.exists()) {
+        // System.out.println("Ya existe un archivo");
+        // } else {
+        System.out.println("Creando archivo...");
         try {
-            Raton raton = new Raton("LaberintoEjemplo(1).txt");
-            List<String> solucion = raton.resolverLaberinto();
-            if (solucion != null) {
-                for (String movimiento : solucion) {
-                    System.out.println(movimiento);
+            file.createNewFile();
+            miFileWriter = new FileWriter(file);
+            miPrintWriter = new PrintWriter(miFileWriter);
+            if (mover(iniciox, inicioy)) { // Si retorna true, se llego a la salida
+                for (String movimiento : movimientos) {
+                    miPrintWriter.println(movimiento);
                 }
             } else {
-                System.out.println("No se encontró un camino");
+                miPrintWriter.println("No se encontró un camino que lleve al objetivo :c"); // Ya agruegué que pasa si
+                                                                                            // no se encuentra un camino
             }
         } catch (IOException e) {
-            System.out.println("Error leyendo el archivo: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            // close resources
+            try {
+                miFileWriter.close();
+                miPrintWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+        // }
     }
 }
